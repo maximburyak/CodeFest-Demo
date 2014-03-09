@@ -38,9 +38,33 @@ namespace MapReduceIndexDemo
 		}
 	}
 
+	//yields exactly the same results as CompanyOrderTotalIndex with the same performance
+	public class CompanyOrderTotalIndex2 : AbstractIndexCreationTask<Order, CompanyOrdersTotal>
+	{
+		public CompanyOrderTotalIndex2()
+		{
+			Map = orders => from order in orders
+							select new CompanyOrdersTotal
+							{
+								CompanyId = order.Company,
+								Total = order.Lines.Sum(orderLine => orderLine.Quantity * (orderLine.PricePerUnit - orderLine.Discount))
+							};
+
+			Reduce = results => from result in results
+								group result by result.CompanyId
+									into g
+									select new CompanyOrdersTotal
+									{
+										CompanyId = g.Key,
+										Total = g.Sum(x => x.Total)
+									};
+
+		}
+	}
+
 	class Program
 	{
-		static void Main(string[] args)
+		static void Main()
 		{
 			using (var store = new EmbeddableDocumentStore())
 			{
@@ -48,20 +72,37 @@ namespace MapReduceIndexDemo
 				GenerateTestData(store);
 
 				new CompanyOrderTotalIndex().Execute(store);
+				new CompanyOrderTotalIndex2().Execute(store);
 
 				using (var session = store.OpenSession())
 				{
-					var query = session.Query<CompanyOrdersTotal, CompanyOrderTotalIndex>()
+					var query1 = session.Query<CompanyOrdersTotal, CompanyOrderTotalIndex>()
 						.Customize(cust => cust.WaitForNonStaleResults())
 						.Include(x => x.CompanyId)
 						.OrderByDescending(x => x.Total)
 						.Take(3)
 						.ToList();
 
-					foreach (var companyOrdersTotal in query)
+					Console.WriteLine("CompanyOrderTotalIndex index output");
+					foreach (var companyOrdersTotal in query1)
 					{
 						Console.WriteLine("CompanyId : {0}, Total: {1}",companyOrdersTotal.CompanyId, companyOrdersTotal.Total);
 					}
+
+					var query2 = session.Query<CompanyOrdersTotal, CompanyOrderTotalIndex2>()
+						.Customize(cust => cust.WaitForNonStaleResults())
+						.Include(x => x.CompanyId)
+						.OrderByDescending(x => x.Total)
+						.Take(3)
+						.ToList();
+
+					Console.WriteLine();
+					Console.WriteLine("CompanyOrderTotalIndex2 index output");
+					foreach (var companyOrdersTotal in query2)
+					{
+						Console.WriteLine("CompanyId : {0}, Total: {1}", companyOrdersTotal.CompanyId, companyOrdersTotal.Total);
+					}
+	
 				}
 			}
 		}
