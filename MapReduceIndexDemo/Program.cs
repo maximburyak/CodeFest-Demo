@@ -83,7 +83,7 @@ namespace MapReduceIndexDemo
 						.Take(3)
 						.ToList();
 
-					Console.WriteLine("CompanyOrderTotalIndex index output");
+					Console.WriteLine("CompanyOrderTotalIndex index - query output");
 					foreach (var companyOrdersTotal in query1)
 					{
 						Console.WriteLine("CompanyId : {0}, Total: {1}",companyOrdersTotal.CompanyId, companyOrdersTotal.Total);
@@ -97,7 +97,7 @@ namespace MapReduceIndexDemo
 						.ToList();
 
 					Console.WriteLine();
-					Console.WriteLine("CompanyOrderTotalIndex2 index output");
+					Console.WriteLine("CompanyOrderTotalIndex2 index - query output");
 					foreach (var companyOrdersTotal in query2)
 					{
 						Console.WriteLine("CompanyId : {0}, Total: {1}", companyOrdersTotal.CompanyId, companyOrdersTotal.Total);
