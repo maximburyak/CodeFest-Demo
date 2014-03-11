@@ -1,9 +1,8 @@
-﻿using FizzWare.NBuilder;
-using Raven.Client;
-using Raven.Client.Embedded;
+﻿using Raven.Client;
+using Raven.Client.Document;
 using Raven.Client.Indexes;
+using Shared;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace MapReduceIndexDemo
@@ -11,7 +10,7 @@ namespace MapReduceIndexDemo
 	public class CompanyOrdersTotal
 	{
 		public string CompanyId { get; set; }
-		public decimal Total { get; set; }
+		public double Total { get; set; }
 	}
 
 	public class CompanyOrderTotalIndex : AbstractIndexCreationTask<Order, CompanyOrdersTotal>
@@ -66,10 +65,14 @@ namespace MapReduceIndexDemo
 	{
 		static void Main()
 		{
-			using (var store = new EmbeddableDocumentStore())
+			
+			using (var store = new DocumentStore
 			{
+				Url = "http://localhost:8080",
+				DefaultDatabase = "Northwind"
+			})
+			{			
 				store.Initialize();
-				GenerateTestData(store);
 
 				new CompanyOrderTotalIndex().Execute(store);
 				new CompanyOrderTotalIndex2().Execute(store);
@@ -86,7 +89,9 @@ namespace MapReduceIndexDemo
 					Console.WriteLine("CompanyOrderTotalIndex index - query output");
 					foreach (var companyOrdersTotal in query1)
 					{
-						Console.WriteLine("CompanyId : {0}, Total: {1}",companyOrdersTotal.CompanyId, companyOrdersTotal.Total);
+						//since with the query Include() was called - this will be loaded from session cache
+						var company = session.Load<dynamic>(companyOrdersTotal.CompanyId);
+						Console.WriteLine("CompanyId : {0}, Company Name: {1}, Total: {2}",companyOrdersTotal.CompanyId, company.Name, companyOrdersTotal.Total);
 					}
 
 					var query2 = session.Query<CompanyOrdersTotal, CompanyOrderTotalIndex2>()
@@ -100,66 +105,13 @@ namespace MapReduceIndexDemo
 					Console.WriteLine("CompanyOrderTotalIndex2 index - query output");
 					foreach (var companyOrdersTotal in query2)
 					{
-						Console.WriteLine("CompanyId : {0}, Total: {1}", companyOrdersTotal.CompanyId, companyOrdersTotal.Total);
+						//since with the query Include() was called - this will be loaded from session cache
+						var company = session.Load<dynamic>(companyOrdersTotal.CompanyId);
+						Console.WriteLine("CompanyId : {0}, Company Name: {1}, Total: {2}", companyOrdersTotal.CompanyId, company.Name, companyOrdersTotal.Total);
 					}
 	
 				}
 			}
-		}
-
-		private static void GenerateTestData(IDocumentStore store)
-		{
-			var companies = GenerateCompanyEntries();
-			var orders = GenerateOrderEntries(companies);
-
-			using (var session = store.OpenSession())
-			{
-				foreach (var company in companies)
-					session.Store(company);
-				foreach (var order in orders)
-					session.Store(order);
-
-				session.SaveChanges();
-			}
-		}
-
-		private static IList<Company> GenerateCompanyEntries()
-		{
-			var generator = new SequentialGenerator<int> { Direction = GeneratorDirection.Ascending, Increment = 1 };
-			return Builder<Company>.CreateListOfSize(10)
-								   .All()
-									  .With(obj => obj.Id = "company/" + generator.Generate())
-									  .With(obj => obj.Address = Builder<Address>.CreateNew().Build())
-								   .Build();
-		}
-
-		private static IEnumerable<Order> GenerateOrderEntries(IEnumerable<Company> companies)
-		{
-			var generator = new SequentialGenerator<int> { Direction = GeneratorDirection.Ascending, Increment = 1 };
-			var random = new Random(234);
-			var orders = new List<Order>();
-			foreach (var company in companies)
-			{
-				var currentCompany = company;
-				var currentOrderLines = Builder<OrderLine>.CreateListOfSize(random.Next(1,15))
-														  .All()
-															.With(obj => obj.Quantity = random.Next(1,25))
-															.With(obj => obj.PricePerUnit = random.Next(10,100))
-															.With(obj => obj.Discount = random.Next(5,50))
-														  .Build()
-														  .ToList();
-
-				var ordersOfCompany = Builder<Order>.CreateListOfSize(random.Next(1,20))
-					.All()
-						.With(obj => obj.Id = "order/" + generator.Generate())
-						.With(obj => obj.Company = currentCompany.Id)
-						.With(obj => obj.Lines = currentOrderLines)
-					.Build();
-
-				orders.AddRange(ordersOfCompany);
-			}
-
-			return orders;
 		}
 	}
 }
