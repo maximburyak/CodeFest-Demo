@@ -7,11 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapReduceIndexDemo", "MapRe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenDBBasicsDemo", "RavenDBBasicsDemo\RavenDBBasicsDemo.csproj", "{349A007A-30D8-456B-BEC2-3BA78563A47A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Northwind Dump", "Northwind Dump", "{DA6FFB26-0D17-49A7-B96C-D43DAE111A3A}"
-	ProjectSection(SolutionItems) = preProject
-		northwind_dump.raven = northwind_dump.raven
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{E0233B43-C26F-48D2-A53A-30EBC485BAFA}"
 EndProject
 Global
