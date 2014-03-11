@@ -44,7 +44,7 @@ namespace RavenDBBasicsDemo
 				{
 					//in the query there was Include() --> inserts the relevant companies to cache --> Load() loads record from cache
 					var company = session.Load<dynamic>(order.Company);
-					Console.WriteLine((string) "Order Id: {0}, ordered by company: {1}", (object) order.Id, (object) company.Name);
+					Console.WriteLine("Order Id: {0}, ordered by company: {1}", order.Id, company.Name);
 				}
 			}
 		}
