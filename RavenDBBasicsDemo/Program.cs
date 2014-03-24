@@ -57,8 +57,7 @@ namespace RavenDBBasicsDemo
 					where company.Address.Country.Equals("France") ||
 					      company.Address.Country.Equals("Israel")
 					select company.Name;
-
-				Console.WriteLine("Names of French and Israeli companies:");
+			
 				foreach (var companyName in companyNamesQuery)
 					Console.WriteLine(companyName);
 			}
